@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>今晚，整片星空将为你一人闪烁</title>
+    <link rel="stylesheet" href="css/skystar.css">
+    <style>
+        /* 添加微信提示条 */
+        .wechat-tip {
+            position: fixed;
+            top: 20px;
+            left: 0;
+            right: 0;
+            background: #FF7043;
+            color: white;
+            padding: 12px;
+            text-align: center;
+            z-index: 1000;
+            font-size: 1.2rem;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- 微信提示（点击播放音乐） -->
+    <div class="wechat-tip">🎵 轻点屏幕播放音乐</div>
+    
+    <!-- 视频背景 -->
+    <video id="videofilm" poster="img/skystar2.jpg" autoplay muted loop>
+        <source src="video/skystar.mp4" type="video/mp4">
+        您的浏览器不支持视频标签
+    </video>
+
+    <!-- 文字区域 -->
+    <div class="textone">
+        <h1>look at the stars</h1>
+    </div>
+    <div class="texttwo">
+        <h1>look how they shine for u</h1>
+    </div>
+    <div class="textthree">
+        <h1></h1>
+    </div>
+
+    <!-- 音频 -->
+    <audio id="bgm" src="video/明天.mp3" loop></audio>
+    
+    <!-- 飘落文字容器 -->
+    <div class="container"></div>
+
+    <!-- JS文件 -->
+    <script src="js/skystar.js"></script>
+    
+    <!-- 音频控制脚本 -->
+    <script>
+        // 检测微信环境
+        const isWeChat = /micromessenger/i.test(navigator.userAgent);
+        
+        if(isWeChat) {
+            document.querySelector('.wechat-tip').style.display = 'block';
+        }
+
+        // 处理用户点击
+        document.body.addEventListener('touchstart', function() {
+            const video = document.querySelector('#videofilm');
+            const audio = document.getElementById('bgm');
+            
+            // 取消视频静音
+            video.muted = false; // ✅ 关键修复
+            
+            // 尝试播放音频
+            if(audio.paused) {
+                audio.play().catch(e => console.log(e));
+            }
+            
+            // 隐藏提示
+            document.querySelector('.wechat-tip').style.display = 'none';
+        }, { once: true });
+    </script>
+<script>
+// 微信环境专用修复
+if(/micromessenger/i.test(navigator.userAgent)) {
+    // 修复DOM结构破坏问题
+    const createContainer = () => {
+        const container = document.createElement('div');
+        container.className = 'container';
+        document.body.appendChild(container);
+        return container;
+    };
+    
+    // 初始化函数重写
+    function safeInit() {
+        window.__wx_isPageReady = true;
+        
+        // 修复路径问题
+        const assets = ['js/skystar.js', 'css/style.css'];
+        assets.forEach(path => {
+            if(!document.querySelector(`[src*="${path}"]`) && 
+               !document.querySelector(`[href*="${path}"]`)) {
+                if(path.endsWith('.js')) {
+                    const script = document.createElement('script');
+                    script.src = path;
+                    document.head.appendChild(script);
+                } else {
+                    const link = document.createElement('link');
+                    link.rel = 'stylesheet';
+                    link.href = path;
+                    document.head.appendChild(link);
+                }
+            }
+        });
+        
+        // 确保容器存在
+        if(!document.querySelector('.container')) createContainer();
+        
+        // 延迟初始化
+        setTimeout(() => {
+            if(typeof init === 'function') init();
+            else window.location.reload();
+        }, 1000);
+    }
+
+    // 替换原始初始化
+    window.init = safeInit;
+    document.addEventListener('DOMContentLoaded', safeInit);
+}
+</script>
+</body>
+</html>
